@@ -16,26 +16,37 @@ class LoginView(AuthView):
 
     def post(self, request):
         if request.method == "POST":
-            username = request.POST.get("email-username-mobile")
+            username_or_email_or_mobile = request.POST.get("email-username-mobile")
             password = request.POST.get("password")
 
-            if not (username and password):
+            if not (username_or_email_or_mobile and password):
                 messages.error(request, "لطفا نام کاربری و رمز ورود را وارد کنید.")
                 return redirect("login")
 
-            if "@" in username:
-                user_email = User.objects.filter(email=username).first()
-                if user_email is None:
+            # Check if the input is an email
+            if "@" in username_or_email_or_mobile:
+                user = User.objects.filter(email=username_or_email_or_mobile).first()
+                if user is None:
                     messages.error(request, "ایمیلی معتبر وارد کنید.")
                     return redirect("login")
-                username = user_email.username
+                username_or_email_or_mobile = user.username
 
-            user_email = User.objects.filter(username=username).first()
-            if user_email is None:
-                messages.error(request, "نام کاربری معتبر وارد کنید.")
-                return redirect("login")
+            # Check if the input is a mobile number
+            elif username_or_email_or_mobile.isdigit() and len(username_or_email_or_mobile) == 11:  # Assuming mobile numbers are 11 digits
+                user = User.objects.filter(profile__mobile=username_or_email_or_mobile).first()  # Assuming you have a Profile model with a mobile field
+                if user is None:
+                    messages.error(request, "شماره موبایل معتبر وارد کنید.")
+                    return redirect("login")
+                username_or_email_or_mobile = user.username
 
-            authenticated_user = authenticate(request, username=username, password=password)
+            else:
+                user = User.objects.filter(username=username_or_email_or_mobile).first()
+                if user is None:
+                    messages.error(request, "نام کاربری معتبر وارد کنید.")
+                    return redirect("login")
+
+            # Authenticate the user
+            authenticated_user = authenticate(request, username=username_or_email_or_mobile, password=password)
             if authenticated_user is not None:
                 # Login the user if authentication is successful
                 login(request, authenticated_user)
@@ -43,8 +54,9 @@ class LoginView(AuthView):
                 # Redirect to the page the user was trying to access before logging in
                 if "next" in request.POST:
                     return redirect(request.POST["next"])
-                else: # Redirect to the home page or another appropriate page
+                else:
+                    # Redirect to the home page or another appropriate page
                     return redirect("index")
             else:
-                messages.error(request, "نام کاربری معتبر وارد کنید.")
+                messages.error(request, "نام کاربری یا رمز عبور نادرست است.")
                 return redirect("login")

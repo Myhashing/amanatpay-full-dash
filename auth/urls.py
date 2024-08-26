@@ -3,7 +3,7 @@ from django.contrib.auth.views import LogoutView
 from .register.views import RegisterView
 from .login.views import LoginView
 from .forgot_password.views import ForgetPasswordView
-from .reset_password.views import ResetPasswordView
+from .reset_password.views import ResetPasswordView, OtpResetPasswordView
 from .verify_email.views import  VerifyEmailTokenView , VerifyEmailView, SendVerificationView
 from .verify_otp.views import VerifyOtpView, ResendOTPView, VerifyMobileView
 
@@ -67,5 +67,17 @@ urlpatterns = [
         name="send-verification",
     ),
     path('verify-otp-code/', VerifyMobileView.as_view(), name='verify-otp-code'),
+
+    path(
+        "verify_otp_rest_password/",
+        ForgetPasswordView.as_view(template_name="auth/verify_otp_rest_password.html"),
+        name="verify_otp_rest_password",
+    ),
+
+    path(
+        "otp_rest_password/",
+        OtpResetPasswordView.as_view(),
+        name="otp_rest_password",
+    ),
 
 ]

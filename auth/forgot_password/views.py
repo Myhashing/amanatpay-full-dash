@@ -1,12 +1,12 @@
 from django.shortcuts import redirect
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.conf import settings
-from auth.helpers import send_password_reset_email
+from auth.helpers import send_password_reset_email, send_otp, encrypt_otp
 from auth.models import Profile  # Import the Profile model
 from auth.views import AuthView
 from datetime import timedelta, datetime
 import uuid
+from django.utils import timezone
 
 
 class ForgetPasswordView(AuthView):
@@ -19,18 +19,21 @@ class ForgetPasswordView(AuthView):
         return super().get(request)
 
     def post(self, request):
-        if request.method == "POST":
-            email = request.POST.get("email")
+        contact_info = request.POST.get('contact')  # Make sure to fetch the input correctly
 
-            user = User.objects.filter(email=email).first()
+        if not contact_info:
+            messages.error(request, "لطفاً ایمیل یا شماره موبایل خود را وارد کنید.")
+            return redirect("forgot-password")
+
+        # Email case
+        if "@" in contact_info:
+            user = User.objects.filter(email=contact_info).first()
             if not user:
                 messages.error(request, "کاربری با این ایمیل وجود ندارد.")
                 return redirect("forgot-password")
 
-            # Generate a token and send a password reset email here
+            # Generate token and send email
             token = str(uuid.uuid4())
-
-            # Set the token in the user's profile and add an expiration time (e.g., 24 hours from now)
             expiration_time = datetime.now() + timedelta(hours=24)
 
             user_profile, created = Profile.objects.get_or_create(user=user)
@@ -38,13 +41,28 @@ class ForgetPasswordView(AuthView):
             user_profile.forget_password_token_expiration = expiration_time
             user_profile.save()
 
-            # Send the password reset email
-            send_password_reset_email(email, token)
+            send_password_reset_email(contact_info, token)
 
-            if settings.EMAIL_HOST_USER and settings.EMAIL_HOST_PASSWORD:
-                messages.success(request, "ایمیل تغییر پسورد برای شما ارسال شد ، ممکن است به هرزنامه رفته باشد")
-            else:
-                messages.error(request, "تنظیمات ایمیل به درستی تنظیم نشده است و امکان ارسال ایمیل وجود ندارد.")
+            messages.success(request, "ایمیل تغییر رمز عبور برای شما ارسال شد. لطفاً ایمیل خود را بررسی کنید.")
+            return redirect("forgot-password")
 
+        # Mobile case
+        elif contact_info.isdigit() and len(contact_info) == 11:  # Assuming 11-digit mobile numbers
+            user = User.objects.filter(profile__mobile=contact_info).first()
+            if not user:
+                messages.error(request, "کاربری با این شماره موبایل وجود ندارد.")
+                return redirect("forgot-password")
 
+            # Use external SMS service to send OTP
+            otp = send_otp(contact_info)  # Assume this returns a success/fail status
+            expiration_time = timezone.now() + timezone.timedelta(minutes=10)
+            # Store OTP and expiration in session
+            request.session['encrypted_otp'] = encrypt_otp(otp)
+            request.session['otp_expiration_time'] = expiration_time.isoformat()
+            request.session['mobile'] = encrypt_otp(contact_info)
+            messages.success(request, "کد تایید به موبایل شما ارسال شد.")
+            return redirect("verify_otp_rest_password")  # Redirect to OTP verification page
+
+        else:
+            messages.error(request, "لطفاً ایمیل یا شماره موبایل معتبر وارد کنید.")
             return redirect("forgot-password")

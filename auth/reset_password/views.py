@@ -1,5 +1,9 @@
+import profile
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
+
+from auth.helpers import verify_otp_from_session, decrypt_otp
 from auth.models import Profile
 from auth.views import AuthView
 from django.contrib.auth import authenticate, login
@@ -48,3 +52,48 @@ class ResetPasswordView(AuthView):
             else:
                 messages.success(request, "رمز ورود با موفقیت ریست شد، مجدد وارد شوید.")
                 return redirect("login")
+
+
+class OtpResetPasswordView(AuthView):
+    def post(self,request):
+        otp_input = request.POST.get('otp')
+        mobile = decrypt_otp(request.session.get('mobile'))
+        if mobile and otp_input:
+            if verify_otp_from_session(request, otp_input):
+                new_password = request.POST.get("password")
+                confirm_password = request.POST.get("confirm-password")
+
+                if not (new_password and confirm_password):
+                    messages.error(request, "لطفا همه فیلدهارا پر کنید.")
+                    return render(request, "reset-password")
+
+                if new_password != confirm_password:
+                    messages.error(request, "رمز ها با هم مطابقت ندارند.")
+                    return render(request, "reset-password")
+                profile = Profile.objects.get(mobile=mobile)
+                user = profile.user
+                user.set_password(new_password)
+                user.save()
+
+                # Clear the forget_password_token
+                profile.forget_password_token = ""
+                profile.save()
+
+                # Log the user in after a successful password reset
+                authenticated_user = authenticate(request, username=user.username, password=new_password)
+                if authenticated_user:
+                    login(request, authenticated_user)
+                    return redirect("index")
+                else:
+                    messages.success(request, "رمز ورود با موفقیت ریست شد، مجدد وارد شوید.")
+                    return redirect("login")
+            else:
+                messages.error(request, "Invalid OTP or OTP has expired.")
+        else:
+            messages.error(request, "Please enter the OTP.")
+
+            return redirect('forgot-password')
+
+
+
+

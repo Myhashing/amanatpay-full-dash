@@ -71,11 +71,8 @@ def send_otp(mobile):
 def verify_otp_from_session(request, otp_input):
     """Verify the OTP by decrypting it from the session and comparing it with the input."""
     encrypted_otp = request.session.get('encrypted_otp')
-    mobile = request.session.get('mobile')
+    mobile = decrypt_otp(request.session.get('mobile'))
     otp_expiration_time = request.session.get('otp_expiration_time')
-    print(encrypted_otp)
-    print(mobile)
-    print(otp_expiration_time)
     if not encrypted_otp or not mobile or not otp_expiration_time:
         print("No OTP, mobile number, or expiration time found in session.")
         return False

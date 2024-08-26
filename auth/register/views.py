@@ -45,7 +45,7 @@ class RegisterView(AuthView):
         otp_code = send_otp(mobile)  # Send OTP to user's mobile number
         expiration_time = timezone.now() + timezone.timedelta(minutes=10)
         request.session['encrypted_otp'] = encrypt_otp(otp_code)
-        request.session['mobile'] = mobile
+        request.session['mobile'] = encrypt_otp(mobile)
         request.session['username'] = username
         request.session['otp_expiration_time'] = expiration_time.isoformat()
 
