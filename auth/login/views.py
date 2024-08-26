@@ -16,7 +16,7 @@ class LoginView(AuthView):
 
     def post(self, request):
         if request.method == "POST":
-            username = request.POST.get("email-username")
+            username = request.POST.get("email-username-mobile")
             password = request.POST.get("password")
 
             if not (username and password):

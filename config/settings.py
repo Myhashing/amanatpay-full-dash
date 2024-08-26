@@ -244,3 +244,5 @@ CSRF_TRUSTED_ORIGINS = [
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+FERNET_KEY = 'nE9Z2qhnvmT11BNhp2MBzAYQBZ6QPpMyqip-F5aqQTw='

@@ -73,10 +73,10 @@
         {% endif %}
         <form id="formAuthentication" class="mb-3" action="{% url 'login' %}" method="post">
           {% csrf_token %}
-          <div class="mb-3">
-            <label for="email" class="form-label">ایمیل یا نام کاربری</label>
-            <input type="email" class="form-control" id="email" name="email-username" value="admin@demo.com" placeholder="ایمیل / نام کاربری" autofocus />
-          </div>
+        <div class="mb-3">
+          <label for="email" class="form-label">ایمیل، نام کاربری، یا موبایل</label>
+          <input type="text" class="form-control" id="email" name="email-username-mobile" placeholder="ایمیل / نام کاربری / موبایل" required>
+        </div>
           <div class="mb-3 form-password-toggle">
             <div class="d-flex justify-content-between">
               <label class="form-label" for="password">رمز ورود</label>

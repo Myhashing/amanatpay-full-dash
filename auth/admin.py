@@ -5,6 +5,7 @@ from .models import Profile
 class Member(admin.ModelAdmin):
     list_display = (
         "user",
+        "mobile",
         "email",
         "is_verified",
         "created_at",

@@ -5,7 +5,7 @@ from .login.views import LoginView
 from .forgot_password.views import ForgetPasswordView
 from .reset_password.views import ResetPasswordView
 from .verify_email.views import  VerifyEmailTokenView , VerifyEmailView, SendVerificationView
-
+from .verify_otp.views import VerifyOtpView, ResendOTPView, VerifyMobileView
 
 urlpatterns = [
     path(
@@ -55,5 +55,17 @@ urlpatterns = [
         ResetPasswordView.as_view(template_name="auth/reset_password.html"),
         name="reset-password",
     ),
+    path(
+        "verify_otp/",
+        VerifyOtpView.as_view(template_name="auth/verify_otp.html"),
+        name="verify-otp",
+    ),
+
+    path(
+        "send_verification_otp/",
+        ResendOTPView.as_view(),
+        name="send-verification",
+    ),
+    path('verify-otp-code/', VerifyMobileView.as_view(), name='verify-otp-code'),
 
 ]

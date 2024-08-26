@@ -1,0 +1,99 @@
+{% extends layout_path %}
+
+{% load static %}
+{% load i18n %}
+
+{% block title %}صفحات - تایید ایمیل{% endblock %}
+
+{% block page_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'vendor/css/pages/page-auth.css' %}" />
+{% endblock page_css %}
+
+{% block page_js %}
+{{ block.super }}
+<script src="{% static 'js/auth-click-loader.js' %}"></script>
+{% endblock page_js %}
+
+
+{% block content %}
+<div class="authentication-wrapper authentication-cover authentication-bg ">
+  <div class="authentication-inner row">
+
+    <!-- /Left Text -->
+    <div class="d-none d-lg-flex col-lg-7 p-0">
+      <div class="auth-cover-bg auth-cover-bg-color d-flex justify-content-center align-items-center">
+        <img src="{% static 'img/illustrations/auth-verify-email-illustration-' %}{{ COOKIES.style|default:style }}.png" alt="auth-verify-email-cover" class="img-fluid my-5 auth-illustration" data-app-light-img="illustrations/auth-verify-email-illustration-light.png" data-app-dark-img="illustrations/auth-verify-email-illustration-dark.png">
+
+        <img src="{% static 'img/illustrations/bg-shape-image-' %}{{ COOKIES.style|default:style }}.png" alt="auth-verify-email-cover" class="platform-bg" data-app-light-img="illustrations/bg-shape-image-light.png" data-app-dark-img="illustrations/bg-shape-image-dark.png">
+      </div>
+    </div>
+    <!-- /Left Text -->
+
+    <!--  Verify email -->
+    <div class="d-flex col-12 col-lg-5 align-items-center p-4 p-sm-5">
+      <div class="w-px-400 mx-auto">
+        <!-- Logo -->
+        <div class="app-brand mb-4">
+          <a href="{% url 'index' %}" class="app-brand-link">
+            <span class="app-brand-logo demo">
+              {% include 'partials/logo.html' %}
+            </span>
+          </a>
+        </div>
+        <!-- /Logo -->
+        <h3 class="mb-1">تایید کد ✉️</h3>
+        <p class="text-start">
+    کد تایید به شماره موبایل شما {{ mobile }} ارسال شد. لطفا کد را وارد کنید.
+        </p>
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-warning{% endif %}" role="alert">
+          {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <form id="formAuthentication" class="mb-3" action="{% url 'verify-otp-code' %}" method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="otp" class="form-label">کد تایید</label>
+            <input type="text" class="form-control" id="otp" name="otp" placeholder="کد ارسال شده به موبایل را وارد کنید" required>
+          </div>
+          <button id="btnSubmit" class="btn btn-primary w-100" type="submit">
+            <span id="btnText" class="me-1">تایید کد</span>
+            <span id="btnLoader" class="spinner-border spinner-border-sm visually-hidden" role="status" aria-hidden="true"></span>
+          </button>
+        </form>
+<script>
+    let timer;
+    let countdown = 120; // 2 minutes in seconds
+
+    function startTimer() {
+        timer = setInterval(function() {
+            countdown--;
+            document.getElementById('timer').textContent = `00:${String(countdown).padStart(2, '0')}`;
+            if (countdown <= 0) {
+                clearInterval(timer);
+                document.getElementById('resend-btn').style.display = 'block';
+            }
+        }, 1000);
+    }
+
+    window.onload = startTimer;
+</script>
+
+<p class="text-center">
+    کدی دریافت نکردید؟ <span id="timer">02:00</span>
+</p>
+<a id="resend-btn" class="text-center" href="{% url 'send-verification' %}" style="display:none;">
+    ارسال مجدد
+</a>
+
+        </p>
+      </div>
+    </div>
+    <!-- / Verify email -->
+  </div>
+</div>
+{% endblock content %}
